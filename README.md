@@ -1,3 +1,16 @@
+# 我的 Qt 工程
+
+<div align="center">
+  <a href="https://github.com/daitcl/Qt-demo/blob/main/License">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT许可证">
+  </a>
+  <a href="https://www.daitcc.top">
+    <img src="https://img.shields.io/badge/Website-daitcc.top-blue?style=flat-square" alt="个人网站">
+  </a>
+</div>
+
+这是我个人开发的 Qt 工程集合。后续会持续增加新的工程。
+
 ## 已有工程
 
 | 工程名称 | 教程地址 | 简介 |
