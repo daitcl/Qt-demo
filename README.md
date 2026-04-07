@@ -1,0 +1,16 @@
+## 已有工程
+
+| 工程名称 | 教程地址 | 简介 |
+|---------|----------|------|
+| serialport | https://www.daitcc.top/posts/13725773/ | 线程安全的串口通信管理库，将串口操作封装在工作线程中，实现串口通信与界面逻辑完全分离，对外提供简洁的 SerialManager 接口。 |
+
+## 构建环境
+
+- Qt 6.8.3
+- Qt Creator 19.0.0
+- 编译器：支持 C++17 的 MSVC / GCC / Clang
+- 构建工具：qmake 或 CMake
+
+## 许可证
+
+协议：[MIT](License)
