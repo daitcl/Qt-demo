@@ -1,4 +1,6 @@
-# 我的 Qt 工程
+<h3><div align="center">我的 Qt 工程</div>
+
+---
 
 <div align="center">
   <a href="https://github.com/daitcl/Qt-demo/blob/main/License">
