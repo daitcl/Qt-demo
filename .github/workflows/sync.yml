@@ -1,0 +1,36 @@
+name: Sync to Gitee
+
+on:
+  # 在 GitHub 仓库收到 push 事件时触发
+  push:
+    branches:
+      - '**'        # 监听所有分支的推送
+  # 允许手动触发工作流
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # 获取完整的提交历史，确保所有分支和标签都能同步
+
+      - name: Setup Git user
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
+      - name: Add Gitee remote
+        run: |
+          # 将 Gitee 仓库添加为一个远程仓库，名称为 gitee
+          # 格式：https://{GITEE_USERNAME}:{GITEE_TOKEN}@gitee.com/{GITEE_USERNAME}/{GITEE_REPO}.git
+          git remote add gitee https://${{ secrets.GITEE_USERNAME }}:${{ secrets.GITEE_TOKEN }}@gitee.com/${{ secrets.GITEE_USERNAME }}/${{ secrets.GITEE_REPO }}.git
+
+      - name: Push all branches and tags to Gitee
+        run: |
+          # 推送所有分支（强制覆盖，确保镜像完全一致）
+          git push gitee --all --force
+          # 推送所有标签（强制覆盖）
+          git push gitee --tags --force
