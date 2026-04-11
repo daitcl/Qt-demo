@@ -60,21 +60,19 @@ jobs:
           git push gitee --all --force
           git push gitee --tags --force
 
-      # ==================== GitCode（自动创建公开仓库 + 推送）====================
+         # ==================== GitCode（自动创建公开仓库 + 推送）====================
       - name: Create GitCode public repository if not exists
         run: |
           echo "检查 GitCode 仓库是否存在..."
-          # 使用 /api/v5/user/repos 需要先获取用户信息，但直接尝试创建也可以
-          # 我们先检查仓库是否已存在，通过尝试获取仓库信息
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://api.gitcode.com/api/v5/repos/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}?access_token=${{ secrets.GITCODE_TOKEN }}")
+          # 列出用户所有仓库，查找同名仓库
+          REPOS_JSON=$(curl -s "https://api.gitcode.com/api/v5/user/repos?access_token=${{ secrets.GITCODE_TOKEN }}&per_page=100")
+          EXISTS=$(echo "$REPOS_JSON" | grep -o "\"name\":\"${{ env.REPO_NAME }}\"" || true)
 
-          if [ "$HTTP_CODE" = "404" ]; then
+          if [ -z "$EXISTS" ]; then
             echo "仓库不存在，正在自动创建公开仓库..."
-            RESPONSE=$(curl -s -X POST "https://api.gitcode.com/api/v5/user/repos" \
+            RESPONSE=$(curl -s -X POST "https://api.gitcode.com/api/v5/user/repos?access_token=${{ secrets.GITCODE_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d "{
-                \"access_token\": \"${{ secrets.GITCODE_TOKEN }}\",
                 \"name\": \"${{ env.REPO_NAME }}\",
                 \"private\": false,
                 \"auto_init\": false,
@@ -87,15 +85,13 @@ jobs:
               echo "❌ GitCode 仓库创建失败，请检查 Token 权限或手动创建"
               exit 1
             fi
-          elif [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ GitCode 仓库已存在，跳过创建"
           else
-            echo "⚠️ GitCode API 返回状态码: $HTTP_CODE，继续尝试推送"
+            echo "✅ GitCode 仓库已存在，跳过创建"
           fi
 
       - name: Push to GitCode
         run: |
-          # 推送认证方式：使用 git 作为用户名，Token 作为密码
+          # 推送认证：用户名 git，密码为 Token
           git remote add gitcode https://git:${{ secrets.GITCODE_TOKEN }}@gitcode.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
           git push gitcode --all --force
           git push gitcode --tags --force
