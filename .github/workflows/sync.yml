@@ -69,21 +69,31 @@ jobs:
 
           if [ "$HTTP_CODE" = "404" ]; then
             echo "仓库不存在，正在自动创建..."
-            curl -X POST "https://gitcode.com/api/v4/projects" \
+            CREATE_RESPONSE=$(curl -s -X POST "https://gitcode.com/api/v4/projects" \
               -H "Content-Type: application/json" \
               -H "PRIVATE-TOKEN: ${{ secrets.GITCODE_TOKEN }}" \
               -d "{
                 \"name\": \"${{ env.REPO_NAME }}\",
                 \"visibility\": \"public\",
                 \"initialize_with_readme\": false
-              }"
-            echo "GitCode 仓库创建完成"
-          else
+              }")
+            echo "创建响应: $CREATE_RESPONSE"
+            # 检查是否创建成功
+            if echo "$CREATE_RESPONSE" | grep -q '"id":'; then
+              echo "GitCode 仓库创建成功"
+            else
+              echo "::error::GitCode 仓库创建失败，请检查 Token 权限或手动创建"
+              exit 1
+            fi
+          elif [ "$HTTP_CODE" = "200" ]; then
             echo "GitCode 仓库已存在，跳过创建"
+          else
+            echo "::warning::GitCode API 返回状态码: $HTTP_CODE，尝试继续推送"
           fi
 
       - name: Push to GitCode
         run: |
-          git remote add gitcode https://oauth2:${{ secrets.GITCODE_TOKEN }}@gitcode.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
+          # 修正认证格式：使用 git 作为用户名，Token 作为密码
+          git remote add gitcode https://git:${{ secrets.GITCODE_TOKEN }}@gitcode.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
           git push gitcode --all --force
           git push gitcode --tags --force
