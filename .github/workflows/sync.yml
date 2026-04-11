@@ -1,11 +1,9 @@
-name: Sync to Gitee
+name: Sync to Gitee and GitCode
 
 on:
-  # 在 GitHub 仓库收到 push 事件时触发
   push:
     branches:
-      - '**'        # 监听所有分支的推送
-  # 允许手动触发工作流
+      - '**'
   workflow_dispatch:
 
 jobs:
@@ -15,22 +13,77 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # 获取完整的提交历史，确保所有分支和标签都能同步
+          fetch-depth: 0
 
       - name: Setup Git user
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-      - name: Add Gitee remote
+      - name: Extract repo and owner names
         run: |
-          # 将 Gitee 仓库添加为一个远程仓库，名称为 gitee
-          # 格式：https://{GITEE_USERNAME}:{GITEE_TOKEN}@gitee.com/{GITEE_USERNAME}/{GITEE_REPO}.git
-          git remote add gitee https://${{ secrets.GITEE_USERNAME }}:${{ secrets.GITEE_TOKEN }}@gitee.com/${{ secrets.GITEE_USERNAME }}/${{ secrets.GITEE_REPO }}.git
+          # 从 github.repository (格式: owner/repo) 中提取
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          OWNER_NAME="${GITHUB_REPOSITORY%%/*}"
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+          echo "OWNER_NAME=$OWNER_NAME" >> $GITHUB_ENV
+          echo "当前仓库: $OWNER_NAME/$REPO_NAME"
 
-      - name: Push all branches and tags to Gitee
+      # ==================== Gitee ====================
+      - name: Create Gitee repository if not exists
         run: |
-          # 推送所有分支（强制覆盖，确保镜像完全一致）
+          echo "检查 Gitee 仓库是否存在..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITEE_TOKEN }}" \
+            "https://gitee.com/api/v5/repos/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}")
+
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "仓库不存在，正在自动创建..."
+            curl -X POST "https://gitee.com/api/v5/user/repos" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: token ${{ secrets.GITEE_TOKEN }}" \
+              -d "{
+                \"name\": \"${{ env.REPO_NAME }}\",
+                \"private\": false,
+                \"auto_init\": false
+              }"
+            echo "Gitee 仓库创建完成"
+          else
+            echo "Gitee 仓库已存在，跳过创建"
+          fi
+
+      - name: Push to Gitee
+        run: |
+          git remote add gitee https://${{ env.OWNER_NAME }}:${{ secrets.GITEE_TOKEN }}@gitee.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
           git push gitee --all --force
-          # 推送所有标签（强制覆盖）
           git push gitee --tags --force
+
+      # ==================== GitCode ====================
+      - name: Create GitCode repository if not exists
+        run: |
+          echo "检查 GitCode 仓库是否存在..."
+          PROJECT_PATH="${{ env.OWNER_NAME }}%2F${{ env.REPO_NAME }}"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "PRIVATE-TOKEN: ${{ secrets.GITCODE_TOKEN }}" \
+            "https://gitcode.com/api/v4/projects/$PROJECT_PATH")
+
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "仓库不存在，正在自动创建..."
+            curl -X POST "https://gitcode.com/api/v4/projects" \
+              -H "Content-Type: application/json" \
+              -H "PRIVATE-TOKEN: ${{ secrets.GITCODE_TOKEN }}" \
+              -d "{
+                \"name\": \"${{ env.REPO_NAME }}\",
+                \"visibility\": \"public\",
+                \"initialize_with_readme\": false
+              }"
+            echo "GitCode 仓库创建完成"
+          else
+            echo "GitCode 仓库已存在，跳过创建"
+          fi
+
+      - name: Push to GitCode
+        run: |
+          git remote add gitcode https://oauth2:${{ secrets.GITCODE_TOKEN }}@gitcode.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
+          git push gitcode --all --force
+          git push gitcode --tags --force
