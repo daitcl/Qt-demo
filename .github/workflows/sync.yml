@@ -3,8 +3,8 @@ name: Sync to Gitee and GitCode
 on:
   push:
     branches:
-      - '**'
-  workflow_dispatch:
+      - '**'                # 所有分支推送时触发
+  workflow_dispatch:        # 允许手动执行
 
 jobs:
   sync:
@@ -29,8 +29,8 @@ jobs:
           echo "OWNER_NAME=$OWNER_NAME" >> $GITHUB_ENV
           echo "当前仓库: $OWNER_NAME/$REPO_NAME"
 
-      # ==================== Gitee ====================
-      - name: Create Gitee repository if not exists
+      # ==================== Gitee（自动创建公开仓库 + 推送）====================
+      - name: Create Gitee public repository if not exists
         run: |
           echo "检查 Gitee 仓库是否存在..."
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -38,7 +38,7 @@ jobs:
             "https://gitee.com/api/v5/repos/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}")
 
           if [ "$HTTP_CODE" = "404" ]; then
-            echo "仓库不存在，正在自动创建..."
+            echo "仓库不存在，正在自动创建公开仓库..."
             curl -X POST "https://gitee.com/api/v5/user/repos" \
               -H "Content-Type: application/json" \
               -H "Authorization: token ${{ secrets.GITEE_TOKEN }}" \
@@ -47,9 +47,11 @@ jobs:
                 \"private\": false,
                 \"auto_init\": false
               }"
-            echo "Gitee 仓库创建完成"
+            echo "✅ Gitee 公开仓库创建完成"
+          elif [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Gitee 仓库已存在，跳过创建"
           else
-            echo "Gitee 仓库已存在，跳过创建"
+            echo "⚠️ Gitee API 返回状态码: $HTTP_CODE，继续尝试推送"
           fi
 
       - name: Push to Gitee
@@ -58,42 +60,42 @@ jobs:
           git push gitee --all --force
           git push gitee --tags --force
 
-      # ==================== GitCode ====================
-      - name: Create GitCode repository if not exists
+      # ==================== GitCode（自动创建公开仓库 + 推送）====================
+      - name: Create GitCode public repository if not exists
         run: |
           echo "检查 GitCode 仓库是否存在..."
-          PROJECT_PATH="${{ env.OWNER_NAME }}%2F${{ env.REPO_NAME }}"
+          # 使用 /api/v5/user/repos 需要先获取用户信息，但直接尝试创建也可以
+          # 我们先检查仓库是否已存在，通过尝试获取仓库信息
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "PRIVATE-TOKEN: ${{ secrets.GITCODE_TOKEN }}" \
-            "https://gitcode.com/api/v4/projects/$PROJECT_PATH")
+            "https://api.gitcode.com/api/v5/repos/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}?access_token=${{ secrets.GITCODE_TOKEN }}")
 
           if [ "$HTTP_CODE" = "404" ]; then
-            echo "仓库不存在，正在自动创建..."
-            CREATE_RESPONSE=$(curl -s -X POST "https://gitcode.com/api/v4/projects" \
+            echo "仓库不存在，正在自动创建公开仓库..."
+            RESPONSE=$(curl -s -X POST "https://api.gitcode.com/api/v5/user/repos" \
               -H "Content-Type: application/json" \
-              -H "PRIVATE-TOKEN: ${{ secrets.GITCODE_TOKEN }}" \
               -d "{
+                \"access_token\": \"${{ secrets.GITCODE_TOKEN }}\",
                 \"name\": \"${{ env.REPO_NAME }}\",
-                \"visibility\": \"public\",
-                \"initialize_with_readme\": false
+                \"private\": false,
+                \"auto_init\": false,
+                \"repository_type\": \"code\"
               }")
-            echo "创建响应: $CREATE_RESPONSE"
-            # 检查是否创建成功
-            if echo "$CREATE_RESPONSE" | grep -q '"id":'; then
-              echo "GitCode 仓库创建成功"
+            echo "API 响应: $RESPONSE"
+            if echo "$RESPONSE" | grep -q '"id":'; then
+              echo "✅ GitCode 公开仓库创建成功"
             else
-              echo "::error::GitCode 仓库创建失败，请检查 Token 权限或手动创建"
+              echo "❌ GitCode 仓库创建失败，请检查 Token 权限或手动创建"
               exit 1
             fi
           elif [ "$HTTP_CODE" = "200" ]; then
-            echo "GitCode 仓库已存在，跳过创建"
+            echo "✅ GitCode 仓库已存在，跳过创建"
           else
-            echo "::warning::GitCode API 返回状态码: $HTTP_CODE，尝试继续推送"
+            echo "⚠️ GitCode API 返回状态码: $HTTP_CODE，继续尝试推送"
           fi
 
       - name: Push to GitCode
         run: |
-          # 修正认证格式：使用 git 作为用户名，Token 作为密码
+          # 推送认证方式：使用 git 作为用户名，Token 作为密码
           git remote add gitcode https://git:${{ secrets.GITCODE_TOKEN }}@gitcode.com/${{ env.OWNER_NAME }}/${{ env.REPO_NAME }}.git
           git push gitcode --all --force
           git push gitcode --tags --force
