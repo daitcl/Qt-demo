@@ -153,7 +153,7 @@ void SerialManager::sendData(const QByteArray &data) {
 - **CSDN**：[daitcl的博客](https://blog.csdn.net/qq_39538318) — csdn、技术文章和教程
 - **GitHub**：[@daitcl](https://github.com/daitcl) —  个人代码仓库（**gitee/gitcode**同名同步）
 - **爱发电**：[爱发电主页](https://ifdian.net/a/daitcc) — 欢迎支持、分享或合作
-- **个人主页**：[daitcc.top](https://www.daitcc.top) — 个人主页、技术文章和教程
+- **个人主页**：[daitcc.top](https://daitcc.top) — 个人主页、技术文章和教程
 - **邮箱**：daitcctop@163.com — 欢迎交流、指正或闲聊
 - **微信公众号**：扫一扫下方二维码，关注公众号获取更新推送  
   <img src="https://raw.gitcode.com/daitcl/picgo/raw/main/wechat_qrcode.jpg" alt="微信公众号二维码" width="150" />

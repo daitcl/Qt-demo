@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="https://github.com/daitcl/Qt-demo/blob/main/License"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT许可证"></a>
-  <a href="https://www.daitcc.top"><img src="https://img.shields.io/badge/个人主页-daitcc.top-blue?style=flat-square" alt="个人主页"></a>
+  <a href="https://daitcc.top"><img src="https://img.shields.io/badge/个人主页-daitcc.top-blue?style=flat-square" alt="个人主页"></a>
   <a href="https://blog.csdn.net/qq_39538318" target="_blank"><img src="https://img.shields.io/badge/CSDN-博客-red?logo=csdn" /></a>
   <a href="https://ifdian.net/a/daitcc" target="_blank"><img src="https://img.shields.io/badge/爱发电-赞助-946ce6?logo=afdian" /></a>
 </div>
@@ -13,7 +13,7 @@
 
 | 工程名称 | 教程地址 | 简介 |
 |---------|----------|------|
-| serialport | https://www.daitcc.top/posts/13725773/ | 线程安全的串口通信管理库，将串口操作封装在工作线程中，实现串口通信与界面逻辑完全分离，对外提供简洁的 SerialManager 接口。 |
+| serialport | https://daitcc.top/posts/13725773/ | 线程安全的串口通信管理库，将串口操作封装在工作线程中，实现串口通信与界面逻辑完全分离，对外提供简洁的 SerialManager 接口。 |
 
 ### 🛠️ 构建环境
 
@@ -35,7 +35,7 @@
 - **CSDN**：[daitcl的博客](https://blog.csdn.net/qq_39538318) — csdn、技术文章和教程
 - **GitHub**：[@daitcl](https://github.com/daitcl) —  个人代码仓库（**gitee/gitcode**同名同步）
 - **爱发电**：[爱发电主页](https://ifdian.net/a/daitcc) — 欢迎支持、分享或合作
-- **个人主页**：[daitcc.top](https://www.daitcc.top) — 个人主页、技术文章和教程
+- **个人主页**：[daitcc.top](https://daitcc.top) — 个人主页、技术文章和教程
 - **邮箱**：daitcctop@163.com — 欢迎交流、指正或闲聊
 - **微信公众号**：扫一扫下方二维码，关注公众号获取更新推送  
   <img src="https://raw.gitcode.com/daitcl/picgo/raw/main/wechat_qrcode.jpg" alt="微信公众号二维码" width="150" />
